@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Resultados — Sistema IMC{% endblock %}
+
+{% block conteudo %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>📋 Resultados de Cálculos</h2>
+    <div>
+        <span class="badge bg-primary fs-6">{{ total }} registro(s)</span>
+        <a href="{{ url_for('calcular') }}" class="btn btn-primary ms-2">➕ Novo Cálculo</a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-primary">
+            <tr>
+                <th>#</th>
+                <th>Nome</th>
+                <th>Peso (kg)</th>
+                <th>Altura (m)</th>
+                <th>IMC</th>
+                <th>Classificação</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>John Doe</td>
+                <td>70.5</td>
+                <td>1.75</td>
+                <td>22.86</td>
+                <td>
+                    <span class="badge bg-success">Peso normal</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<a href="{{ url_for('index') }}" class="btn btn-outline-primary">← Voltar ao Início</a>
+
+{% endblock %}
