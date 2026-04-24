@@ -4,6 +4,23 @@ from db import execute_query
 app = Flask(__name__)
 app.secret_key = 'imc_secret_key_2026'
 
+def calcular_imc(peso, altura ):
+    return round(peso / (altura ** 2), 2) 
+
+def classificacao(imc):
+    if imc < 18.5:
+        classificacao = 'Abaixo do peso'
+    elif imc < 25:
+        classificacao = 'Peso normal'
+    elif imc < 30:
+        classificacao = 'Sobrepeso'
+
+    # Demais classificações
+    else:
+        classificacao = 'Erro na classificação'    
+    
+    return classificacao
+
 
 @app.route('/')
 def index():
@@ -27,8 +44,26 @@ CREATE TABLE IF NOT EXISTS calculos (
 
 @app.route('/resultados')
 def resultados():
-    calculos = []
-    return render_template('resultados.html', calculos=calculos, total=len(calculos))
+
+    try:
+
+        sql = "SELECT * FROM calculos WHERE deletado_em IS NULL"
+
+        calculos = execute_query(sql, fetch=True)
+
+        if calculos is None:
+            calculos = []
+
+    except Exception as e:
+        flash (f'Erro ao buscar dados!', 'danger')
+        app.logger.error(f'Erro no INSERT: {E}')
+        return redirect (url_for('resultados'))
+
+    return render_template('resultados.html', 
+                           calculos=calculos, 
+                           total=len(calculos),
+                           calcular = calcular_imc,
+                           classificacao = classificacao)
 
 
 @app.route('/calcular', methods=['GET', 'POST'])
@@ -50,8 +85,8 @@ def calcular():
             execute_query(sql, (nome, peso, altura))
 
             # Gera a notificação de sucesso
-            flash(f'Produto [{nome}] cadastrado com sucesso!', 'sucesso')
-
+            flash(f'Produto [{nome}] cadastrado com sucesso!', 'sucesso')    
+           
             # Leva a tela de resultados 
             return redirect (url_for('resultados'))
 
@@ -61,23 +96,7 @@ def calcular():
             app.logger.error(f'Erro no INSERT: {E}')
             return redirect (url_for('calcular'))
         
-
-        imc = round(peso / (altura ** 2), 2) 
-
-        if imc < 18.5:
-            classificacao = 'Abaixo do peso'
-        elif imc < 25:
-            classificacao = 'Peso normal'
-        elif imc < 30:
-            classificacao = 'Sobrepeso'
-
-        ##demais classificações
-        else:
-            classificacao = 'Erro na classificação'
-
-        flash(f'Olá {nome}, seu IMC é {imc} e sua classificação é: {classificacao}', 'success')      
-
-        return redirect(url_for('resultados'))
+        # flash(f'Olá {nome}, seu IMC é {imc} e sua classificação é: {classificacao}', 'success')    
 
     return render_template('formulario.html')
 
