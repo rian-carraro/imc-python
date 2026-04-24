@@ -7,7 +7,18 @@ app.secret_key = 'imc_secret_key_2026'
 
 @app.route('/')
 def index():
-    sql = "SHOW TABLES"
+    sql = '''
+CREATE TABLE IF NOT EXISTS calculos (
+    id_calculo BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    peso DECIMAL(6, 2) NOT NULL,
+    altura DECIMAL(5, 2) NOT NULL,
+
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    alterado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deletado_em DATETIME NULL
+);
+'''
     resultado = execute_query(sql, fetch=True)
     print(resultado)
 
@@ -24,12 +35,32 @@ def resultados():
 def calcular():
 
     if request.method == 'POST':
-        nome = request.form.get('nome', 'Não foi enviado nome!')
-        peso = request.form.get('peso', 'Não foi enviado peso!')
-        altura = request.form.get('altura', 'Não foi enviado altura!')
+        nome = request.form.get('nome', 'Não foi enviado nome!').strip()
+        peso = request.form.get('peso', 'Não foi enviado peso!').strip()
+        altura = request.form.get('altura', 'Não foi enviado altura!').strip()
 
         peso = float(peso)
         altura = float(altura)
+
+        try:
+            # Cria o SCRIPT SQL para ser enviado, %s é cada valor 
+            sql = 'INSERT INTO calculos(nome, peso, altura) VALUES (%s, %s, %s);'
+
+            # Passa o SQL + os parametros que aqui são os dados em uma lista 
+            execute_query(sql, (nome, peso, altura))
+
+            # Gera a notificação de sucesso
+            flash(f'Produto [{nome}] cadastrado com sucesso!', 'sucesso')
+
+            # Leva a tela de resultados 
+            return redirect (url_for('resultados'))
+
+
+        except Exception as e:
+            flash (f'Erro ao salvar!', 'danger')
+            app.logger.error(f'Erro no INSERT: {E}')
+            return redirect (url_for('calcular'))
+        
 
         imc = round(peso / (altura ** 2), 2) 
 
